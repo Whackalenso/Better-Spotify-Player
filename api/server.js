@@ -26,6 +26,14 @@ const app = express();
 
 app.use(cors()).use(cookieParser());
 
+app.get("/is_authenticated", (req, res) => {
+  if (req.cookies) {
+    res.json({"authenticated": req.cookies["access_token"] != null})
+  } else {
+    res.json({"authenticated": false})
+  }
+})
+
 app.get("/login", function (req, res) {
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
@@ -94,14 +102,9 @@ app.get("/callback", function (req, res) {
           console.log(body);
         });
 
-        // we can also pass the token to the browser to make requests from there
-        res.redirect(
-          "http://127.0.0.1:5173/#" +
-            querystring.stringify({
-              access_token: access_token,
-              refresh_token: refresh_token,
-            })
-        );
+        res.cookie("access_token", access_token)
+        res.cookie("refresh_token", refresh_token)
+        res.redirect("http://127.0.0.1:5173/");
       } else {
         res.redirect(
           "http://127.0.0.1:5173/#" +
@@ -114,9 +117,7 @@ app.get("/callback", function (req, res) {
   }
 });
 
-app.get("/refresh_token", function (req, res) {
-  // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
+function refreshToken(req, res) {
   var authOptions = {
     url: "https://accounts.spotify.com/api/token",
     headers: {
@@ -126,20 +127,45 @@ app.get("/refresh_token", function (req, res) {
     },
     form: {
       grant_type: "refresh_token",
-      refresh_token: refresh_token,
+      refresh_token: req.cookies.refresh_token,
     },
     json: true,
   };
 
   request.post(authOptions, function (error, response, body) {
     if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
-      res.send({
-        access_token: access_token,
-      });
+      res.cookie("access_token") = body.access_token;
+      // may need new refresh token too
     }
   });
-});
+}
+
+// app.get("/refresh_token", function (req, res) {
+//   // requesting access token from refresh token
+//   var refresh_token = req.query.refresh_token;
+//   var authOptions = {
+//     url: "https://accounts.spotify.com/api/token",
+//     headers: {
+//       Authorization:
+//         "Basic " +
+//         new Buffer.from(client_id + ":" + client_secret).toString("base64"),
+//     },
+//     form: {
+//       grant_type: "refresh_token",
+//       refresh_token: refresh_token,
+//     },
+//     json: true,
+//   };
+
+//   request.post(authOptions, function (error, response, body) {
+//     if (!error && response.statusCode === 200) {
+//       var access_token = body.access_token;
+//       res.send({
+//         access_token: access_token,
+//       });
+//     }
+//   });
+// });
 
 app.listen(8888, () => {
   console.log(`Example app listening on port 8888`);
