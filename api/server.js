@@ -26,7 +26,8 @@ const app = express();
 
 app.use(cors()).use(cookieParser());
 
-app.get("/is_authenticated", (req, res) => {
+app.get("/is-authenticated", (req, res) => {
+  console.log("asdf")
   if (req.cookies) {
     res.json({"authenticated": req.cookies["access_token"] != null})
   } else {
