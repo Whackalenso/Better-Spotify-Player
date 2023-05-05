@@ -1,5 +1,11 @@
-body {
+@import url('https://fonts.googleapis.com/css?family=Poppins&display=swap');
+
+:root {
   --off-black: #242424;
+  font-family: Poppins;
+}
+
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -11,18 +17,59 @@ body {
   bottom: 0px;
   height: 18vh;
   width: 100%;
-  padding: 0 12px;
+  box-sizing: border-box;
+  padding: 26px;
 }
 
-.relative {
+.bottom-bar-content {
   position: relative;
+  display: flex;
+  align-items: center;
   height: 100%;
 }
 
-.song-details {
+.song-details-wrapper {
   height: 100%;
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
 .album-cover {
   height: 100%;
+}
+
+.song-details {
+  height: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.song-name {
+  color: #fff;
+  font-size: 16px;
+}
+
+.song-artist {
+  color: #CCCCCC;
+  font-size: 12px;
+}
+
+.controls {
+  position: absolute;
+  display: flex;
+  gap: 40px;
+  left: 50%;
+  transform: translateX(-50%)
+}
+
+.options {
+  height: 100%;
+  background-color: blue;
+  position: absolute;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }

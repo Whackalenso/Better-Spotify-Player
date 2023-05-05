@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PlayCircleFill, PauseCircleFill, ArrowClockwise, ArrowCounterclockwise, SkipStartFill, SkipEndFill } from "react-bootstrap-icons";
 
 const api_url = "https://localhost:8888/"
 
@@ -30,9 +31,23 @@ function Player() {
 
     </div>
     <div className="bottom-bar">
-      <div className="relative">
-        <div className="song-details">
+      <div className="bottom-bar-content">
+        <div className="song-details-wrapper">
           <img className="album-cover" src={currentSong.album.images[0].url}/>
+          <div className="song-details">
+            <div className="song-name">{currentSong.name}</div>
+            <div className="song-artist">{currentSong.artists[0].name}</div>
+          </div>
+        </div>
+        <div className="controls">
+          <SkipStartFill color="white" size={40}/>
+          <ArrowCounterclockwise color="white" size={40}/>
+          <PlayCircleFill color="white" size={40}/>
+          <ArrowClockwise color="white" size={40}/>
+          <SkipEndFill color="white" size={40}/>
+        </div>
+        <div className="options">
+          adfafd
         </div>
       </div>
     </div>
