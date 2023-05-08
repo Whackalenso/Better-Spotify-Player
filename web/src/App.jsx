@@ -57,19 +57,31 @@ function Player() {
   }); // TrackObject
   const [playing, setPlaying] = useState(true);
   const [progress, setProgress] = useState(0.5); // percent
-  const [prevProgress, setPrevProgress] = useState(null);
+  const [prevPos, setPrevPos] = useState(null);
+  const songPos = useRef(progress);
 
   const [mousePos, setMousePos] = useState(0);
-  const mouseClick = useRef(false);
+  const animateProgressMove = useRef(false);
 
   const [skipTimeInput, setSkipTimeInput] = useState(
     localStorage.getItem("skipTime") ? localStorage.getItem("skipTime") : 5
   );
   const [skipTime, setSkipTime] = useState(skipTimeInput);
 
+  const playerRef = useRef();
+
   useEffect(() => {
     localStorage.setItem("skipTime", skipTime);
+
+    playerRef.addEventListener("keydown", ())
   }, [skipTime]);
+
+  function submitProgress(undo=false) {
+    if (!undo) {
+      setPrevPos(songPos.current);
+    }
+    songPos.current = progress;
+  }
 
   function submitSkipTime() {
     if (skipTimeInput > 0) {
@@ -88,7 +100,7 @@ function Player() {
       Math.min(Math.max(e.clientX, 0), window.innerWidth) / window.innerWidth;
     setMousePos(pos);
 
-    mouseClick.current = click;
+    animateProgressMove.current = click;
     if (e.buttons == 1) {
       setProgress(pos);
     }
@@ -112,26 +124,37 @@ function Player() {
     return `calc(${percent * 100}% - 50px)`;
   };
 
-  const mouseTimestampStackPos = () => {
+  const mouseTimestampStack = () => {
     var mousePx = mousePos * window.innerWidth;
     var progressPx = progress * window.innerWidth;
     if (progressPx < 50) {
       progressPx = 50;
     }
+    if (mousePx < 60) {
+      mousePx = 60;
+    }
     if (progressPx > window.innerWidth - 50) {
       progressPx -= 50;
     }
     if (mousePx >= progressPx - 40 && mousePx < progressPx + 40) {
-      return 40;
+      return true;
     }
     if (mousePx > window.innerWidth - 40) {
-      return 40;
+      return true;
     }
-    return 10;
+    return false;
   };
 
   return (
-    <div className="player">
+    <div className="player" tabIndex={0}
+    onKeyDown={(e) => {
+      if (e.key == "Escape") {
+        if (prevPos) {
+          animateProgressMove.current = true;
+          setProgress(prevPos);
+          submitProgress(true);
+        }
+    }}}>
       <div
         className="progress-zone"
         onMouseMove={mouseUpdate}
@@ -139,13 +162,14 @@ function Player() {
           e.preventDefault();
           mouseUpdate(e, true);
         }}
+        onMouseUp={(e) => {submitProgress()}}
         onMouseLeave={mouseUpdate}
       >
         <div
           className="timestamp"
           style={{
             left: timestampPos(progress),
-            transitionDuration: mouseClick.current ? "100ms" : "0ms",
+            transitionDuration: animateProgressMove.current ? "100ms" : "0ms",
           }}
         >
           {msToTime(progress * currentSong.duration_ms)}
@@ -157,7 +181,7 @@ function Player() {
           className="timestamp mouse-timestamp"
           style={{
             left: timestampPos(mousePos, 0),
-            top: mouseTimestampStackPos(),
+            top: mouseTimestampStack() ? 40 : 10,
             opacity:
               msToTime(progress * currentSong.duration_ms) ===
               msToTime(mousePos * currentSong.duration_ms)
@@ -173,14 +197,14 @@ function Player() {
             left: `${mousePos * 100}%`,
           }}
         ></div>
-        {prevProgress ? (
-          <div className="scrubber" style={{ height: "5%" }}></div>
+        {prevPos ? (
+          <div className="scrubber" style={{ height: "5%", left: `${prevPos * 100}%` }}></div>
         ) : null}
         <div
           className="progress"
           style={{
             width: `${progress * 100}%`,
-            transitionDuration: mouseClick.current ? "100ms" : "0ms",
+            transitionDuration: animateProgressMove.current ? "100ms" : "0ms",
           }}
         ></div>
       </div>
