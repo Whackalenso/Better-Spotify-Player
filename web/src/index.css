@@ -2,20 +2,64 @@
 
 :root {
   --off-black: #242424;
+  --gray-text: #CCCCCC;
   font-family: Poppins;
 }
 
 body {
   margin: 0;
-  padding: 0;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.progress-zone {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  cursor: col-resize;
+  background-color: white;
+  overflow-x: hidden;
+}
+
+.timestamp {
+  position: absolute;
+  top: 10px;
+  transition: all;
+
+  -webkit-transform: translateZ(0); /* for weird opacity anim bug */
+}
+
+.mouse-timestamp {
+  transition: opacity 200ms, top 100ms;
+  font-size: 14px;
+}
+
+.progress {
   height: 100%;
+  background-color: var(--off-black);
+  transition: all;
+  
+  filter: invert(1);
+  mix-blend-mode: difference;
+}
+
+.scrubber {
+  width: 2px;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  background-color: var(--off-black);
 }
 
 .bottom-bar {
   background-color: var(--off-black);
-  position: absolute;
+  color: white;
   bottom: 0px;
-  height: 18vh;
+  height: 125px;
   width: 100%;
   box-sizing: border-box;
   padding: 26px;
@@ -47,12 +91,11 @@ body {
 }
 
 .song-name {
-  color: #fff;
   font-size: 16px;
 }
 
 .song-artist {
-  color: #CCCCCC;
+  color: var(--gray-text);
   font-size: 12px;
 }
 
@@ -64,12 +107,80 @@ body {
   transform: translateX(-50%)
 }
 
+.control-btn {
+  cursor: pointer;
+  transition-property: all;
+  transition-duration: 100ms;
+}
+
+.control-btn:hover {
+  transform: scale(1.08);
+}
+
+.skip-btn {
+  position: relative;
+  height: 40px;
+  cursor: pointer;
+}
+
+.skip-arrow {
+  transition-property: all;
+  transition-duration: 100ms;
+}
+
+.skip-btn:hover .skip-arrow {
+  transform: scale(1.08);
+}
+
+.skip-btn-num {
+  position: absolute;
+  left: 51%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-size: 10px;
+}
+
+.skip-btn-num::after {
+  content: "s"
+}
+
 .options {
   height: 100%;
-  background-color: blue;
   position: absolute;
   right: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  color: var(--gray-text);
+}
+
+.options-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+input {
+  outline: none;
+  border: none;
+  font: inherit;
+  color: var(--off-black);
+  text-align: center;
+  border-radius: 10px;
+  background-color: white;
+  width: 50px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
