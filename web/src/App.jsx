@@ -57,8 +57,14 @@ function Player() {
   }); // TrackObject
   const [playing, setPlaying] = useState(true);
   const [progress, setProgress] = useState(0.5); // percent
-  const [prevPos, setPrevPos] = useState(null);
-  const songPos = useRef(progress);
+  // const songPos = useRef(progress);
+
+  const [prevPos, _setPrevPos] = useState(null);
+  const prevPosRef = useRef(prevPos);
+  const setPrevPos = (value) => {
+    prevPosRef.current = value;
+    _setPrevPos(value);
+  };
 
   const [mousePos, setMousePos] = useState(0);
   const animateProgressMove = useRef(false);
@@ -68,20 +74,32 @@ function Player() {
   );
   const [skipTime, setSkipTime] = useState(skipTimeInput);
 
-  const playerRef = useRef();
-
   useEffect(() => {
     localStorage.setItem("skipTime", skipTime);
-
-    playerRef.addEventListener("keydown", ())
   }, [skipTime]);
 
-  function submitProgress(undo=false) {
-    if (!undo) {
-      setPrevPos(songPos.current);
+  function handleKeyDown(e) {
+    if (e.key == "Escape") {
+      if (prevPosRef.current != null) {
+        animateProgressMove.current = true;
+        setProgress(prevPos.current);
+        setPrevPos(null);
+        //submitProgress();
+      }
     }
-    songPos.current = progress;
   }
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // function submitProgress() {
+  //   songPos.current = progress;
+  // }
 
   function submitSkipTime() {
     if (skipTimeInput > 0) {
@@ -146,23 +164,19 @@ function Player() {
   };
 
   return (
-    <div className="player" tabIndex={0}
-    onKeyDown={(e) => {
-      if (e.key == "Escape") {
-        if (prevPos) {
-          animateProgressMove.current = true;
-          setProgress(prevPos);
-          submitProgress(true);
-        }
-    }}}>
+    <div className="player">
       <div
         className="progress-zone"
         onMouseMove={mouseUpdate}
         onMouseDown={(e) => {
           e.preventDefault();
           mouseUpdate(e, true);
+          setPrevPos(progress);
+          console.log(prevPos);
         }}
-        onMouseUp={(e) => {submitProgress()}}
+        // onMouseUp={(e) => {
+        //   submitProgress();
+        // }}
         onMouseLeave={mouseUpdate}
       >
         <div
@@ -198,7 +212,10 @@ function Player() {
           }}
         ></div>
         {prevPos ? (
-          <div className="scrubber" style={{ height: "5%", left: `${prevPos * 100}%` }}></div>
+          <div
+            className="scrubber"
+            style={{ height: "5%", left: `${prevPos * 100}%` }}
+          ></div>
         ) : null}
         <div
           className="progress"
