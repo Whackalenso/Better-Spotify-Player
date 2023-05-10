@@ -194,3 +194,35 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+@media screen and (max-width: 850px) {
+  .control-btn {
+    width: 30px;
+  }
+
+  .skip-btn {
+    scale: 75%;
+  }
+
+  .controls {
+    gap: 20px;
+  }
+
+  .song-details-wrapper {
+    height: 75%;
+  }
+
+  .song-name {
+    font-size: 12px;
+  }
+  .song-artist {
+    font-size: 9px;
+  }
+
+  .options-item {
+    font-size: 12px;
+  }
+  input {
+    width: 30px;
+  }
+}

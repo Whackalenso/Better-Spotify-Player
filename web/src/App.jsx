@@ -85,15 +85,22 @@ function Player() {
     localStorage.getItem("skipTime") ? localStorage.getItem("skipTime") : 5
   );
   const [skipTime, setSkipTime] = useState(skipTimeInput);
+  const skipTimeRef = useRef();
+  skipTimeRef.current = skipTime;
 
   useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+
     const interval = setInterval(() => {
       if (playingRef.current) {
-        const progress_ms = currentSong.duration_ms * progressRef.current;
-        setProgress((progress_ms + 100) / currentSong.duration_ms);
+        addMs(100);
       }
     }, 100);
-    return () => clearInterval(interval);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -109,15 +116,18 @@ function Player() {
         //submitProgress();
       }
     }
+    
+    if (e.key == " ") {
+      setPlaying(!playingRef.current);
+    }
+
+    if (e.key == "ArrowLeft") {
+      addMs(-1000 * skipTimeRef.current);
+    }
+    if (e.key == "ArrowRight") {
+      addMs(1000 * skipTimeRef.current);
+    }
   }
-
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   // function submitProgress() {
   //   songPos.current = progress;
@@ -131,8 +141,9 @@ function Player() {
     }
   }
 
-  function seek() {
-    console.log("seek");
+  function addMs(ms) {
+    const progress_ms = currentSong.duration_ms * progressRef.current;
+    setProgress((progress_ms + ms) / currentSong.duration_ms);
   }
 
   function mouseUpdate(e, click = false) {
@@ -263,7 +274,7 @@ function Player() {
           </div>
           <div className="controls">
             <SkipStartFill className="control-btn" size={40} />
-            <SkipBtn icon={ArrowCounterclockwise} onClick={seek} skipTime={skipTime}/>
+            <SkipBtn icon={ArrowCounterclockwise} onClick={() => addMs(-1000 * skipTime)} skipTime={skipTime}/>
             <div
               onClick={() => {
                 setPlaying(!playing);
@@ -275,7 +286,7 @@ function Player() {
                 <PlayCircleFill className="control-btn" size={40} />
               )}
             </div>
-            <SkipBtn icon={ArrowClockwise} onClick={seek} skipTime={skipTime}/>
+            <SkipBtn icon={ArrowClockwise} onClick={() => addMs(1000 * skipTime)} skipTime={skipTime}/>
             <SkipEndFill className="control-btn" size={40} />
           </div>
           <div className="options">
