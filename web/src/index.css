@@ -55,6 +55,16 @@ body {
   background-color: var(--off-black);
 }
 
+.prev-pos-text {
+  width: 150px;
+  transform: translateX(-50%);
+  text-align: center;
+  top: 50px;
+  position: absolute;
+  font-size: 10px;
+  font-weight: 600;
+}
+
 .bottom-bar {
   background-color: var(--off-black);
   color: white;

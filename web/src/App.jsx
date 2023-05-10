@@ -55,24 +55,40 @@ function Player() {
     name: "Shadow Dance",
     duration_ms: 884000,
   }); // TrackObject
-  const [playing, setPlaying] = useState(true);
-  const [progress, setProgress] = useState(0.5); // percent
-  // const songPos = useRef(progress);
-
-  const [prevPos, _setPrevPos] = useState(null);
-  const prevPosRef = useRef(prevPos);
-  const setPrevPos = (value) => {
-    prevPosRef.current = value;
-    _setPrevPos(value);
+  const [playing, _setPlaying] = useState(false);
+  const playingRef = useRef(playing);
+  const setPlaying = (value) => {
+    _setPlaying(value);
+    playingRef.current = value;
   };
 
+  const [progress, setProgress] = useState(0.5); // percent
+  const progressRef = useRef();
+  progressRef.current = progress;
+  // const songPos = useRef(progress);
+
+  const [prevPos, setPrevPos] = useState(null);
+  const prevPosRef = useRef();
+  prevPosRef.current = prevPos;
+
   const [mousePos, setMousePos] = useState(0);
-  const animateProgressMove = useRef(false);
+  const animateProgressMove = useRef(true);
 
   const [skipTimeInput, setSkipTimeInput] = useState(
     localStorage.getItem("skipTime") ? localStorage.getItem("skipTime") : 5
   );
   const [skipTime, setSkipTime] = useState(skipTimeInput);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (playingRef.current) {
+        const progress_ms = currentSong.duration_ms * progressRef.current;
+        setProgress((progress_ms + 100) / currentSong.duration_ms);
+        console.log(progressRef.current * window.innerWidth);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("skipTime", skipTime);
@@ -82,7 +98,7 @@ function Player() {
     if (e.key == "Escape") {
       if (prevPosRef.current != null) {
         animateProgressMove.current = true;
-        setProgress(prevPos.current);
+        setProgress(prevPosRef.current);
         setPrevPos(null);
         //submitProgress();
       }
@@ -118,8 +134,8 @@ function Player() {
       Math.min(Math.max(e.clientX, 0), window.innerWidth) / window.innerWidth;
     setMousePos(pos);
 
-    animateProgressMove.current = click;
     if (e.buttons == 1) {
+      animateProgressMove.current = click;
       setProgress(pos);
     }
   }
@@ -170,13 +186,20 @@ function Player() {
         onMouseMove={mouseUpdate}
         onMouseDown={(e) => {
           e.preventDefault();
+          playingRef.current = false;
           mouseUpdate(e, true);
-          setPrevPos(progress);
-          console.log(prevPos);
+          if (mousePos != progress) {
+            // to check if you're setting the progress to where it already is
+            setPrevPos(progress);
+          } else {
+            setPrevPos(null);
+          }
         }}
-        // onMouseUp={(e) => {
-        //   submitProgress();
-        // }}
+        onMouseUp={(e) => {
+          animateProgressMove.current = true;
+          playingRef.current = playing;
+          //submitProgress();
+        }}
         onMouseLeave={mouseUpdate}
       >
         <div
@@ -215,7 +238,9 @@ function Player() {
           <div
             className="scrubber"
             style={{ height: "5%", left: `${prevPos * 100}%` }}
-          ></div>
+          >
+            <div className="prev-pos-text">Press esc to revert</div>
+          </div>
         ) : null}
         <div
           className="progress"
@@ -240,7 +265,17 @@ function Player() {
           <div className="controls">
             <SkipStartFill className="control-btn" size={40} />
             <SkipBtn icon={ArrowCounterclockwise} onClick={seek} />
-            <PlayCircleFill className="control-btn" size={40} />
+            <div
+              onClick={() => {
+                setPlaying(!playing);
+              }}
+            >
+              {playing ? (
+                <PauseCircleFill className="control-btn" size={40} />
+              ) : (
+                <PlayCircleFill className="control-btn" size={40} />
+              )}
+            </div>
             <SkipBtn icon={ArrowClockwise} onClick={seek} />
             <SkipEndFill className="control-btn" size={40} />
           </div>
