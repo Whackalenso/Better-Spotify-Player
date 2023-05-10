@@ -42,6 +42,13 @@ const msToTime = (ms) => {
   return `${minutes}:${seconds}`;
 };
 
+const SkipBtn = (props) => (
+  <div className="skip-btn" onClick={props.onClick}>
+    <props.icon className="skip-arrow" size={40} />
+    <p className="skip-btn-num">{props.skipTime}</p>
+  </div>
+);
+
 function Player() {
   const [currentSong, setCurrentSong] = useState({
     album: {
@@ -84,7 +91,6 @@ function Player() {
       if (playingRef.current) {
         const progress_ms = currentSong.duration_ms * progressRef.current;
         setProgress((progress_ms + 100) / currentSong.duration_ms);
-        console.log(progressRef.current * window.innerWidth);
       }
     }, 100);
     return () => clearInterval(interval);
@@ -139,13 +145,6 @@ function Player() {
       setProgress(pos);
     }
   }
-
-  const SkipBtn = (props) => (
-    <div className="skip-btn" onClick={props.onClick}>
-      <props.icon className="skip-arrow" size={40} />
-      <p className="skip-btn-num">{skipTime}</p>
-    </div>
-  );
 
   const timestampPos = (percent, pr = 50) => {
     const px = percent * window.innerWidth;
@@ -264,7 +263,7 @@ function Player() {
           </div>
           <div className="controls">
             <SkipStartFill className="control-btn" size={40} />
-            <SkipBtn icon={ArrowCounterclockwise} onClick={seek} />
+            <SkipBtn icon={ArrowCounterclockwise} onClick={seek} skipTime={skipTime}/>
             <div
               onClick={() => {
                 setPlaying(!playing);
@@ -276,7 +275,7 @@ function Player() {
                 <PlayCircleFill className="control-btn" size={40} />
               )}
             </div>
-            <SkipBtn icon={ArrowClockwise} onClick={seek} />
+            <SkipBtn icon={ArrowClockwise} onClick={seek} skipTime={skipTime}/>
             <SkipEndFill className="control-btn" size={40} />
           </div>
           <div className="options">
