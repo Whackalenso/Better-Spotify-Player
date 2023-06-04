@@ -8,17 +8,17 @@ import {
   SkipEndFill,
 } from "react-bootstrap-icons";
 
-const api_url = "https://localhost:8888/";
+const api_url = "http://localhost:8888/";
 
 function App() {
-  const [authenticated, setAuthenticated] = useState(true);
+  const [authenticated, setAuthenticated] = useState();
 
   useEffect(() => {
-    // fetch(api_url + "is-authenticated")
-    //   .then((res) => res.json())
-    //   .then((data) => {
-    //     setAuthenticated(data.authenticated);
-    //   });
+    fetch(api_url + "is-authenticated", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        setAuthenticated(data.authenticated);
+      });
   }, []);
 
   if (authenticated == null) {
@@ -50,18 +50,13 @@ const SkipBtn = (props) => (
 );
 
 function Player() {
-  const [currentSong, setCurrentSong] = useState({
-    album: {
-      images: [
-        {
-          url: "https://upload.wikimedia.org/wikipedia/en/b/bc/AlbumcoverDaveHolland-WhatGoesAround.jpg",
-        },
-      ],
-    },
-    artists: [{ name: "Dave Holland Big Band" }],
-    name: "Shadow Dance",
-    duration_ms: 884000,
-  }); // TrackObject
+  const [currentSong, _setCurrentSong] = useState(null);
+  const currentSongRef = useRef(null);
+  const setCurrentSong = (value) => {
+    _setCurrentSong(value);
+    currentSongRef.current = value;
+  };
+
   const [playing, _setPlaying] = useState(false);
   const playingRef = useRef(playing);
   const setPlaying = (value) => {
@@ -69,9 +64,12 @@ function Player() {
     playingRef.current = value;
   };
 
-  const [progress, setProgress] = useState(0.5); // percent
-  const progressRef = useRef();
-  progressRef.current = progress;
+  const [progress, _setProgress] = useState(null); // percent
+  const progressRef = useRef(null);
+  const setProgress = (value) => {
+    _setProgress(value);
+    progressRef.current = value;
+  };
   // const songPos = useRef(progress);
 
   const [prevPos, setPrevPos] = useState(null);
@@ -80,6 +78,9 @@ function Player() {
 
   const [mousePos, setMousePos] = useState(0);
   const animateProgressMove = useRef(true);
+
+  const checkForUpdates = useRef(true);
+  const checkForUpdatesTimeout = useRef(); // timer to turn back on checking after progress is submitted
 
   const [skipTimeInput, setSkipTimeInput] = useState(
     localStorage.getItem("skipTime") ? localStorage.getItem("skipTime") : 5
@@ -91,15 +92,27 @@ function Player() {
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
 
-    const interval = setInterval(() => {
+    const progressInterval = setInterval(() => {
       if (playingRef.current) {
         addMs(100);
+        if (progressRef.current >= 1) {
+          playingRef.current = false;
+        }
       }
     }, 100);
 
+    refresh();
+
+    const fetchInterval = setInterval(() => {
+      if (checkForUpdates.current) {
+        refresh();
+      }
+    }, 1000);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      clearInterval(interval);
+      clearInterval(progressInterval);
+      clearInterval(fetchInterval);
     };
   }, []);
 
@@ -107,31 +120,97 @@ function Player() {
     localStorage.setItem("skipTime", skipTime);
   }, [skipTime]);
 
+  function refresh() {
+    fetch(api_url + "currently-playing", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (checkForUpdates.current) {
+          // in case it changed in this time
+          console.log("Refreshed");
+          setProgress(data.progress_ms / data.item.duration_ms);
+          setCurrentSong(data);
+          setPlaying(data.is_playing);
+        }
+      });
+  }
+
+  function stopRefresh() {
+    checkForUpdates.current = false;
+    if (checkForUpdatesTimeout.current) {
+      clearTimeout(checkForUpdatesTimeout.current);
+    }
+  }
+
   function handleKeyDown(e) {
     if (e.key == "Escape") {
       if (prevPosRef.current != null) {
         animateProgressMove.current = true;
+
+        stopRefresh();
+
         setProgress(prevPosRef.current);
         setPrevPos(null);
-        //submitProgress();
+        submitProgress();
       }
     }
-    
+
     if (e.key == " ") {
-      setPlaying(!playingRef.current);
+      togglePlaying();
     }
 
     if (e.key == "ArrowLeft") {
-      addMs(-1000 * skipTimeRef.current);
+      skipL();
     }
     if (e.key == "ArrowRight") {
-      addMs(1000 * skipTimeRef.current);
+      skipR();
     }
   }
 
-  // function submitProgress() {
-  //   songPos.current = progress;
-  // }
+  function togglePlaying() {
+    stopRefresh();
+    if (playingRef.current) {
+      callApi("pause", "PUT");
+    } else {
+      callApi("play", "PUT", {
+        position_ms:
+          progressRef.current * currentSongRef.current.item.duration_ms,
+      });
+    }
+    setPlaying(!playingRef.current);
+  }
+
+  function skipR() {
+    stopRefresh();
+    addMs(1000 * skipTime);
+    submitProgress();
+  }
+
+  function skipL() {
+    stopRefresh();
+    addMs(-1000 * skipTime);
+    submitProgress();
+  }
+
+  function callApi(endpoint, method, body = null) {
+    fetch(api_url + endpoint, {
+      method: method,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : null,
+    }).then(() => {
+      checkForUpdatesTimeout.current = setTimeout(() => {
+        checkForUpdates.current = true;
+      }, 2000);
+    });
+  }
+
+  function submitProgress() {
+    callApi("seek", "PUT", {
+      position_ms: Math.floor(
+        progressRef.current * currentSongRef.current.item.duration_ms
+      ),
+    });
+  }
 
   function submitSkipTime() {
     if (skipTimeInput > 0) {
@@ -142,8 +221,9 @@ function Player() {
   }
 
   function addMs(ms) {
-    const progress_ms = currentSong.duration_ms * progressRef.current;
-    setProgress((progress_ms + ms) / currentSong.duration_ms);
+    const progress_ms =
+      currentSongRef.current.item.duration_ms * progressRef.current;
+    setProgress((progress_ms + ms) / currentSongRef.current.item.duration_ms);
   }
 
   function mouseUpdate(e, click = false) {
@@ -189,6 +269,10 @@ function Player() {
     return false;
   };
 
+  if (currentSong == null) {
+    return <div>Nothing is playing</div>;
+  }
+
   return (
     <div className="player">
       <div
@@ -196,7 +280,14 @@ function Player() {
         onMouseMove={mouseUpdate}
         onMouseDown={(e) => {
           e.preventDefault();
+
           playingRef.current = false;
+
+          checkForUpdates.current = false;
+          if (checkForUpdatesTimeout.current) {
+            clearTimeout(checkForUpdatesTimeout.current);
+          }
+
           mouseUpdate(e, true);
           if (mousePos != progress) {
             // to check if you're setting the progress to where it already is
@@ -206,9 +297,11 @@ function Player() {
           }
         }}
         onMouseUp={(e) => {
-          animateProgressMove.current = true;
-          playingRef.current = playing;
-          //submitProgress();
+          if (e.button == 0) {
+            animateProgressMove.current = true;
+            playingRef.current = playing;
+            submitProgress();
+          }
         }}
         onMouseLeave={mouseUpdate}
       >
@@ -219,10 +312,10 @@ function Player() {
             transitionDuration: animateProgressMove.current ? "100ms" : "0ms",
           }}
         >
-          {msToTime(progress * currentSong.duration_ms)}
+          {msToTime(progress * currentSong.item.duration_ms)}
         </div>
         <div className="timestamp" style={{ right: 10 }}>
-          {msToTime(currentSong.duration_ms)}
+          {msToTime(currentSong.item.duration_ms)}
         </div>
         <div
           className="timestamp mouse-timestamp"
@@ -230,13 +323,13 @@ function Player() {
             left: timestampPos(mousePos, 0),
             top: mouseTimestampStack() ? 40 : 10,
             opacity:
-              msToTime(progress * currentSong.duration_ms) ===
-              msToTime(mousePos * currentSong.duration_ms)
+              msToTime(progress * currentSong.item.duration_ms) ===
+              msToTime(mousePos * currentSong.item.duration_ms)
                 ? 0
                 : 1,
           }}
         >
-          {msToTime(mousePos * currentSong.duration_ms)}
+          {msToTime(mousePos * currentSong.item.duration_ms)}
         </div>
         <div
           className="scrubber"
@@ -265,29 +358,49 @@ function Player() {
           <div className="song-details-wrapper">
             <img
               className="album-cover"
-              src={currentSong.album.images[0].url}
+              src={currentSong.item.album.images[0].url}
             />
             <div className="song-details">
-              <div className="song-name">{currentSong.name}</div>
-              <div className="song-artist">{currentSong.artists[0].name}</div>
+              <div className="song-name">{currentSong.item.name}</div>
+              <div className="song-artist">
+                {currentSong.item.artists
+                  .map((artist) => artist.name)
+                  .join(", ")}
+              </div>
             </div>
           </div>
           <div className="controls">
-            <SkipStartFill className="control-btn" size={40} />
-            <SkipBtn icon={ArrowCounterclockwise} onClick={() => addMs(-1000 * skipTime)} skipTime={skipTime}/>
-            <div
+            <SkipStartFill
+              className="control-btn"
+              size={40}
               onClick={() => {
-                setPlaying(!playing);
+                fetch(api_url + "previous", { credentials: "include" });
               }}
-            >
+            />
+            <SkipBtn
+              icon={ArrowCounterclockwise}
+              onClick={skipL}
+              skipTime={skipTime}
+            />
+            <div onClick={togglePlaying}>
               {playing ? (
                 <PauseCircleFill className="control-btn" size={40} />
               ) : (
                 <PlayCircleFill className="control-btn" size={40} />
               )}
             </div>
-            <SkipBtn icon={ArrowClockwise} onClick={() => addMs(1000 * skipTime)} skipTime={skipTime}/>
-            <SkipEndFill className="control-btn" size={40} />
+            <SkipBtn
+              icon={ArrowClockwise}
+              onClick={skipR}
+              skipTime={skipTime}
+            />
+            <SkipEndFill
+              className="control-btn"
+              size={40}
+              onClick={() => {
+                fetch(api_url + "next", { credentials: "include" });
+              }}
+            />
           </div>
           <div className="options">
             <div className="options-item">
