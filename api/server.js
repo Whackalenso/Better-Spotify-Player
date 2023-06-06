@@ -7,7 +7,7 @@ require("dotenv").config();
 
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
-const redirect_uri = "http://localhost:8888/callback";
+const redirect_uri = "better-spotify-player.vercel.app/callback";
 
 function generateRandomString(length) {
   var text = "";
@@ -27,7 +27,7 @@ const app = express();
 app.use(express.json())
 app.use(cookieParser())
 
-app.use(cors({credentials: true, origin: "http://localhost:5173"}));
+app.use(cors({credentials: true, origin: "better-spotify-player.vercel.app"}));
 
 function refreshToken(req, res) {
   var authOptions = {
@@ -118,7 +118,7 @@ app.get("/callback", function (req, res) {
 
   if (state === null || state !== storedState) {
     res.redirect(
-      "http://localhost:5173/#" +
+      "better-spotify-player.vercel.app/#" +
         querystring.stringify({
           error: "state_mismatch",
         })
@@ -157,10 +157,10 @@ app.get("/callback", function (req, res) {
         res.cookie("access_token", access_token)
         res.cookie("refresh_token", refresh_token)
         res.cookie("last_refreshed", Date.now())
-        res.redirect("http://localhost:5173/");
+        res.redirect("better-spotify-player.vercel.app/");
       } else {
         res.redirect(
-          "http://localhost:5173/#" +
+          "better-spotify-player.vercel.app/#" +
             querystring.stringify({
               error: "invalid_token",
             })
