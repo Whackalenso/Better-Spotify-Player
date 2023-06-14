@@ -24,5 +24,5 @@
     "eslint-plugin-react-refresh": "^0.3.4",
     "vite": "^4.3.4"
   },
-  "proxy": "https://better-spotify-player-backend.vercel.app"
+  "proxy": "https://better-spotify-player-api.onrender.com"
 }
