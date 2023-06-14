@@ -8,7 +8,7 @@ import {
   SkipEndFill,
 } from "react-bootstrap-icons";
 
-const api_url = "https://better-spotify-player-backend.vercel.app/";
+const api_url = "https://better-spotify-player-api.onrender.com/";
 
 function App() {
   const [authenticated, setAuthenticated] = useState();
