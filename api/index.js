@@ -7,7 +7,7 @@ require("dotenv").config();
 
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
-const redirect_uri = "better-spotify-player.vercel.app/callback";
+const redirect_uri = "better-spotify-player-backend.vercel.app/callback";
 
 function generateRandomString(length) {
   var text = "";
@@ -27,7 +27,7 @@ const app = express();
 app.use(express.json())
 app.use(cookieParser())
 
-app.use(cors({credentials: true, origin: "better-spotify-player.vercel.app"}));
+app.use(cors({credentials: true, origin: "https://better-spotify-player.vercel.app"}));
 
 function refreshToken(req, res) {
   var authOptions = {
