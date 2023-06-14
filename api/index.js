@@ -118,7 +118,7 @@ app.get("/callback", function (req, res) {
 
   if (state === null || state !== storedState) {
     res.redirect(
-      "better-spotify-player.vercel.app/#" +
+      "https://better-spotify-player.vercel.app/#" +
         querystring.stringify({
           error: "state_mismatch",
         })
@@ -157,10 +157,10 @@ app.get("/callback", function (req, res) {
         res.cookie("access_token", access_token)
         res.cookie("refresh_token", refresh_token)
         res.cookie("last_refreshed", Date.now())
-        res.redirect("better-spotify-player.vercel.app/");
+        res.redirect("https://better-spotify-player.vercel.app/");
       } else {
         res.redirect(
-          "better-spotify-player.vercel.app/#" +
+          "https://better-spotify-player.vercel.app/#" +
             querystring.stringify({
               error: "invalid_token",
             })
