@@ -14,7 +14,7 @@ function App() {
   const [authenticated, setAuthenticated] = useState();
 
   useEffect(() => {
-    fetch(api_url + "is-authenticated", { credentials: "include" })
+    fetch("/is-authenticated")
       .then((res) => res.json())
       .then((data) => {
         setAuthenticated(data.authenticated);
