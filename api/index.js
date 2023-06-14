@@ -91,6 +91,7 @@ app.get("/is-authenticated", (req, res) => {
 })
 
 app.get("/login", function (req, res) {
+  console.log("/login")
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
 
@@ -111,6 +112,7 @@ app.get("/login", function (req, res) {
 app.get("/callback", function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
+  console.log("/callback")
 
   var code = req.query.code || null;
   var state = req.query.state || null;
