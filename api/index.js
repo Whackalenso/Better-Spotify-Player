@@ -71,8 +71,8 @@ app.use((req, res, next) => {
     
       request.post(authOptions, function (error, response, body) {
         if (!error && response.statusCode === 200) {
-          res.cookie("access_token",  body.access_token, { sameSite: 'none' });
-          res.cookie("last_refreshed", Date.now(), { sameSite: 'none'});
+          res.cookie("access_token",  body.access_token, { sameSite: 'none', secure: true });
+          res.cookie("last_refreshed", Date.now(), { sameSite: 'none', secure: true});
           // may need new refresh token too
         }
       });
@@ -156,9 +156,9 @@ app.get("/callback", function (req, res) {
         // use the access token to access the Spotify Web API
         request.get(options);
 
-        res.cookie("access_token", access_token, { sameSite: 'none' })
-        res.cookie("refresh_token", refresh_token, { sameSite: 'none' })
-        res.cookie("last_refreshed", Date.now(), { sameSite: 'none' })
+        res.cookie("access_token", access_token, { sameSite: 'none', secure: true })
+        res.cookie("refresh_token", refresh_token, { sameSite: 'none', secure: true })
+        res.cookie("last_refreshed", Date.now(), { sameSite: 'none', secure: true })
         res.redirect("https://better-spotify-player.vercel.app/");
       } else {
         res.redirect(
