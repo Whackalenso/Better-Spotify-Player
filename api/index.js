@@ -82,7 +82,7 @@ app.use((req, res, next) => {
 })
 
 app.get("/is-authenticated", (req, res) => {
-  console.log(req.cookies);
+  console.log(JSON.stringify(req.cookies))
   if (req.cookies) {
     res.json({"authenticated": req.cookies["access_token"] != null})
   } else {
