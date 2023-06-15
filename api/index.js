@@ -10,7 +10,7 @@ const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = "https://better-spotify-player-api.onrender.com/callback";
 const client_url = "https://better-spotify-player.onrender.com"; //"https://better-spotify-player.vercel.app"
 
-const cookieSettings = { secure: true, domain: "onrender.com"} //sameSite: 'none', 
+const cookieSettings = { domain: "onrender.com"} //sameSite: 'none', secure: true, 
 
 function generateRandomString(length) {
   var text = "";
