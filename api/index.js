@@ -8,6 +8,9 @@ require("dotenv").config();
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = "https://better-spotify-player-api.onrender.com/callback";
+const client_url = "https://better-spotify-player.onrender.com"; //"https://better-spotify-player.vercel.app"
+
+const cookieSettings = { sameSite: 'none', secure: true }
 
 function generateRandomString(length) {
   var text = "";
@@ -26,7 +29,7 @@ const app = express();
 
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors({credentials: true, origin: "https://better-spotify-player.vercel.app"}));
+app.use(cors({credentials: true, origin: client_url})); 
 
 function refreshToken(req, res) {
   var authOptions = {
@@ -71,8 +74,8 @@ app.use((req, res, next) => {
     
       request.post(authOptions, function (error, response, body) {
         if (!error && response.statusCode === 200) {
-          res.cookie("access_token",  body.access_token, { sameSite: 'none', secure: true });
-          res.cookie("last_refreshed", Date.now(), { sameSite: 'none', secure: true});
+          res.cookie("access_token",  body.access_token, cookieSettings);
+          res.cookie("last_refreshed", Date.now(), cookieSettings);
           // may need new refresh token too
         }
       });
@@ -120,7 +123,7 @@ app.get("/callback", function (req, res) {
 
   if (state === null || state !== storedState) {
     res.redirect(
-      "https://better-spotify-player.vercel.app/#" +
+      client_url + "/#" +
         querystring.stringify({
           error: "state_mismatch",
         })
@@ -156,13 +159,13 @@ app.get("/callback", function (req, res) {
         // use the access token to access the Spotify Web API
         request.get(options);
 
-        res.cookie("access_token", access_token, { sameSite: 'none', secure: true })
-        res.cookie("refresh_token", refresh_token, { sameSite: 'none', secure: true })
-        res.cookie("last_refreshed", Date.now(), { sameSite: 'none', secure: true })
-        res.redirect("https://better-spotify-player.vercel.app/");
+        res.cookie("access_token", access_token, cookieSettings)
+        res.cookie("refresh_token", refresh_token, cookieSettings)
+        res.cookie("last_refreshed", Date.now(), cookieSettings)
+        res.redirect(client_url);
       } else {
         res.redirect(
-          "https://better-spotify-player.vercel.app/#" +
+          client_url + "/#" +
             querystring.stringify({
               error: "invalid_token",
             })
