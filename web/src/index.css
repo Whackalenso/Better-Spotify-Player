@@ -27,6 +27,10 @@ body {
   outline: none;
   border: none;
   border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .login-btn:hover {

@@ -32,9 +32,9 @@ function App() {
   return authenticated ? (
     <Player />
   ) : (
-    <button class="login-btn center" href={api_url + "login"}>
+    <a className="login-btn center" href={api_url + "login"}>
       Log in with Spotify
-    </button>
+    </a>
   );
 }
 
