@@ -8,7 +8,11 @@ import {
   SkipEndFill,
 } from "react-bootstrap-icons";
 
-const api_url = "https://better-spotify-player-api.onrender.com/";
+const prod = true;
+
+const api_url = prod
+  ? "https://better-spotify-player-api.onrender.com/"
+  : "http://localhost:8888/";
 
 function App() {
   const [authenticated, setAuthenticated] = useState();
@@ -28,7 +32,9 @@ function App() {
   return authenticated ? (
     <Player />
   ) : (
-    <a href={api_url + "login"}>Login in with Spotify</a>
+    <button class="login-btn center" href={api_url + "login"}>
+      Log in with Spotify
+    </button>
   );
 }
 
@@ -56,6 +62,7 @@ function Player() {
     _setCurrentSong(value);
     currentSongRef.current = value;
   };
+  const [fetched, setFetched] = useState(false);
 
   const [playing, _setPlaying] = useState(false);
   const playingRef = useRef(playing);
@@ -121,17 +128,27 @@ function Player() {
   }, [skipTime]);
 
   function refresh() {
-    fetch(api_url + "currently-playing", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (checkForUpdates.current) {
-          // in case it changed in this time
-          console.log("Refreshed");
-          setProgress(data.progress_ms / data.item.duration_ms);
-          setCurrentSong(data);
-          setPlaying(data.is_playing);
-        }
-      });
+    try {
+      fetch(api_url + "currently-playing", { credentials: "include" })
+        .then((res) => {
+          if (res.status == 404) {
+            return null;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          setFetched(true);
+          if (checkForUpdates.current && data != null) {
+            // in case it changed in this time
+            console.log("Refreshed");
+            setProgress(data.progress_ms / data.item.duration_ms);
+            setCurrentSong(data);
+            setPlaying(data.is_playing);
+          }
+        });
+    } catch (err) {
+      console.log("hi");
+    }
   }
 
   function stopRefresh() {
@@ -270,7 +287,7 @@ function Player() {
   };
 
   if (currentSong == null) {
-    return <div>Nothing is playing</div>;
+    return fetched ? <div className="center">Nothing is playing</div> : <></>;
   }
 
   return (

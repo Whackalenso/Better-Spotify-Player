@@ -5,12 +5,14 @@ const querystring = require("querystring");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+const prod = true;
+
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
-const redirect_uri = "https://better-spotify-player-api.onrender.com/callback";
-const client_url = "https://better-spotify-player.onrender.com"; //"https://better-spotify-player.vercel.app"
+const redirect_uri = prod ? "https://better-spotify-player-api.onrender.com/callback" : "http://localhost:8888/callback";
+const client_url = prod ? "https://better-spotify-player.onrender.com" : "http://localhost:5173"; //"https://better-spotify-player.vercel.app"
 
-const cookieSettings = { secure: true, domain: ".onrender.com"} // sameSite: 'none', 
+const cookieSettings = { secure: true, sameSite: 'none'} // domain: ".onrender.com", 
 
 function generateRandomString(length) {
   var text = "";
@@ -85,7 +87,6 @@ app.use((req, res, next) => {
 })
 
 app.get("/is-authenticated", (req, res) => {
-  console.log(JSON.stringify(req.cookies))
   if (req.cookies) {
     res.json({"authenticated": req.cookies["access_token"] != null})
   } else {
@@ -177,7 +178,11 @@ app.get("/callback", function (req, res) {
 
 app.get("/currently-playing", (req, res) => {
   request.get({url: "https://api.spotify.com/v1/me/player/currently-playing", headers: {Authorization: "Bearer " + req.cookies["access_token"]}}, (error, response, body) => {
-    res.send(body);
+    if (body == "") {
+      res.status(404).send({msg: "Nothing is playing"})
+    } else {
+      res.send(body);
+    }
   })
 })
 
@@ -234,7 +239,7 @@ app.put("/play", (req, res) => {
 // });
 
 app.listen(8888, () => {
-  console.log(`Example app listening on port 8888`);
+  console.log(`Listening on port 8888`);
 });
 
 module.exports = app;

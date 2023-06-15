@@ -10,6 +10,29 @@ body {
   margin: 0;
 }
 
+.center {
+  margin-left: 50vw;
+  margin-top: 50vh;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.login-btn {
+  cursor: pointer;
+  background-color: green;
+  color: white;
+  font-size: 18px;
+  height: 80px;
+  width: 300px;
+  outline: none;
+  border: none;
+  border-radius: 15px;
+}
+
+.login-btn:hover {
+  background-color: darkgreen;
+}
+
 .player {
   display: flex;
   flex-direction: column;
